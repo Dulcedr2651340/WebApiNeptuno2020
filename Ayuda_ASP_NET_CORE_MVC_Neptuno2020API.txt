@@ -1,0 +1,69 @@
+Herramientas / Administrador de paquetes NuGet
+Administrar paquetes NuGet para la Solucion
+
+En Examinar colocar:
+
+Microsoft.EntityFrameworkCore.SqlServer    -- >2.2.1 ó 2.1.1 ó 2.1.0
+
+Microsoft.EntityFrameworkCore.Tools   --> 2.2.1 ó 2.1.1 ó 2.1.0
+
+-- ingenieria de reversa para crear las clases desde la BD de SQL Server
+Herramientas / Administrador de paquetes NuGet
+Consola del Administrador de Paquetes
+
+PM>
+-- Autenticación de SQL Server
+Scaffold-DbContext "Data Source=localhost;Initial Catalog=neptuno2020api;User ID=sa;Password=sql;" Microsoft.EntityFrameworkCore.SqlServer -OutputDir Models
+
+-- Autenticación de Windows
+Scaffold-DbContext "Data Source=localhost;Initial Catalog=neptuno2020api;trusted_connection=yes;" Microsoft.EntityFrameworkCore.SqlServer -OutputDir Models
+
+
+-- crear la cadena de conexión en el archivo appsettings.json
+
+{
+  "ConnectionStrings": {
+    "conex1": "server=localhost;database=neptuno2020api;user id=sa;password=sql;" 
+  },
+  "Logging": {
+....
+}
+
+-- Luego debemos registrar el contexto como un servicio en el archivo startup.cs
+-- pero primero importaremos las siguientes librerias
+
+using Nombre_Proyecto_CoreMVC.Models;
+using Microsoft.EntityFrameworkCore;
+  
+-- luego dentro del método ConfigureServices y debajo de services.AddMvc(...); agregaremos
+
+public void ConfigureServices(IServiceCollection services){
+
+   ....
+   services.AddMvc(.....);
+
+   // agregar
+   services.AddCors();
+
+   var conexion = Configuration.GetConnectionString("conex1");
+
+   services.AddDbContext<neptuno2020apiContext>(opcion => opcion.UseSqlServer(conexion));
+}
+
+
+-- luego:
+public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+{
+    // Para que el servicio web API pueda ser utilizado por React 
+    app.UseCors(opciones =>
+    {
+        opciones.WithOrigins("http://localhost:3000");
+        opciones.AllowAnyMethod();
+        opciones.AllowAnyHeader();
+    });
+    
+    ...
+
+    app.UseMvc();
+}
+
